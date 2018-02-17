@@ -1,4 +1,5 @@
 #include <iostream>
+#include <vector>
 
 template<typename T>
 struct MyList {
@@ -20,62 +21,72 @@ struct MyList {
 };
 
 template<typename T>
-MyList<T>* merge(MyList<T>* first, int n) {
-    if(n == 1)
+MyList<T>* merge(MyList<T>* first) {
+    if (first->next == nullptr)
         return first;
 
-    MyList<T>* second = first;
-    for (int i = 0; i != n / 2 - 1; ++i) {
+    MyList<T> *second = first;
+    MyList<T> *cursor = first;
+    MyList<T> *term = second;
+    while (cursor->next != nullptr) {
+        term = second;
         second = second->next;
+        cursor = cursor->next;
+        if (cursor->next != nullptr) {
+            cursor = cursor->next;
+        }
     }
-    MyList<T>* term = second;
-    second = second->next;
     term->next = nullptr;
-    first = merge(first, n / 2);
-    second = merge(second, n - n / 2);
+    return split(merge(first), merge(second));
+}
+
+template<typename T>
+MyList<T>* split(MyList<T>* first, MyList<T>* second) {
     MyList<T>* num = nullptr;
     MyList<T>* last = nullptr;
 
-    while (first != nullptr || second != nullptr) {
+    while (first || second) {
+        MyList<T>* cur = nullptr;
         if (!second || (first && first->value < second->value)) {
-            if (last) {
-                last->next = first;
-            } else {
-                num = first;
-            }
-            last = first;
+            cur = first;
             first = first->next;
         } else {
-            if (last) {
-                last->next = second;
-            } else {
-                num = second;
-            }
-            last = second;
+            cur = second;
             second = second->next;
         }
+        if (last) {
+            last->next = cur;
+        } else {
+            num = cur;
+        }
+        last = cur;
     }
 
     return num;
 }
 
+template<typename T>
+MyList<T>* mergesort(MyList<T>* num) {
+    return merge(num);
+}
+
 int main() {
     int n;
     std::cin >> n;
-    MyList<int>* last = new MyList<int>;
-    MyList<int>* begin = last;
+    MyList<int>* last = nullptr;
+    MyList<int>* begin = nullptr;
     for (int i = 0; i < n; ++i) {
         int a;
         std::cin >> a;
-        last->value = a;
-        if (i != n - 1) {
-            last->next = new MyList<int>;
-            last = last->next;
+        if (i == 0) {
+            last = new MyList<int> (a);
+            begin = last;
         } else {
-            last->next = nullptr;
+            last->next = new MyList<int>(a);
+            last = last->next;
         }
     }
-    last = merge(begin, n);
+    last = mergesort(begin);
 
     MyList<int>* iter = last;
     while (iter != nullptr) {
